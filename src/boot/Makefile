@@ -26,18 +26,25 @@ NASM		=	nasm
 BOCHSIMAGE	=	bximage
 
 FIRSTSTAGE	=	firststage
+SECONDSTAGE	=	secondstage
 DISKIMG		=	disk.img
 
 all: $(DISKIMG)
 
-$(FIRSTSTAGE): firststage.s
+$(FIRSTSTAGE): firststage.s defs12.hs
 	$(NASM) -o $(FIRSTSTAGE) firststage.s
 
-$(DISKIMG):	$(FIRSTSTAGE)
+$(SECONDSTAGE): secondstage.s defs12.hs
+	$(NASM) -o $(SECONDSTAGE) secondstage.s
+
+$(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE)
 	# If u you change this line, make sure to change bochsrc.txt too
+	-rm -f $(DISKIMG)
 	$(BOCHSIMAGE) -q -hd -mode=flat -size=10240 $(DISKIMG)
 	dd if=$(FIRSTSTAGE) of=$(DISKIMG) bs=512 count=1 conv=notrunc
+	dd if=$(SECONDSTAGE) of=$(DISKIMG) bs=512 count=2 seek=1 conv=notrunc
 
 clean:
 	-rm -f $(FIRSTSTAGE)
+	-rm -f $(SECONDSTAGE)
 	-rm -f $(DISKIMG)

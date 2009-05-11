@@ -28,11 +28,9 @@
 ; We get the size of the Second Stage and location to load it in the
 ; given variables
 ;
- 
-%define SECOND_STAGE_SIZE			1
-%define SECOND_STAGE_LOAD_SEGMENT 	05000h
-;
 
+%include  "defs12.hs"
+ 
 %define SCREEN_WIDTH 80
 %define SCREEN_HEIGHT 25
 
