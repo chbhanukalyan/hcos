@@ -31,11 +31,11 @@ DISKIMG		=	disk.img
 
 all: $(DISKIMG)
 
-$(FIRSTSTAGE): firststage.s defs12.hs
-	$(NASM) -o $(FIRSTSTAGE) firststage.s
+$(FIRSTSTAGE): $(FIRSTSTAGE).s defs12.hs
+	$(NASM) -o $(FIRSTSTAGE) $(FIRSTSTAGE).s
 
-$(SECONDSTAGE): secondstage.s defs12.hs
-	$(NASM) -o $(SECONDSTAGE) secondstage.s
+$(SECONDSTAGE): $(SECONDSTAGE).s defs12.hs
+	$(NASM) -o $(SECONDSTAGE) $(SECONDSTAGE).s
 
 $(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE)
 	# If u you change this line, make sure to change bochsrc.txt too

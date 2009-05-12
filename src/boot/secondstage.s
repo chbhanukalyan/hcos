@@ -26,27 +26,16 @@
 
 %include "defs12.hs"
 
+[BITS 16]
+[ORG SECOND_STAGE_LOAD_SEGMENT * 0x10]
 start:
-	; Fill the GDT Table
-	xor ebx, ebx
-	mov ebx, ds
-	shl ebx, 4
-	mov eax, ebx
-
-;	mov [gdtentry2+2], ax
-;	mov [gdtentry3+2], ax
-	shr eax, 16
-;	mov [gdtentry2+4], al
-;	mov [gdtentry3+4], al
-;	mov [gdtentry2+7], ah
-;	mov [gdtentry3+7], ah
-
-	; Create GDT base
-	lea eax, [gdtable+ebx]	; Physical mem location of the table
-	mov [gdtreg+2], eax
+	; Fill in the DS, ES, SS registers
+	xor eax, eax
+	mov ds, ax
+	mov es, ax
+	mov ss, ax
 
 	; mov on to more imp work
-
 	cli
 
 	lgdt [gdtreg]
@@ -55,20 +44,23 @@ start:
 	mov ax, 0x0001
 	lmsw ax
 
-; Long jump into a 32 bit world!
-;	jmp dword 8:0x00050000+xyz
-	jmp dword 8:SECOND_STAGE_LOAD_SEGMENT+xyz
+; Long jump into a 32 bit mode. This is required to be a long jump as
+; the x86 ISA documentation clearly mentions that the instruction prefect
+; queue must be flushed (to remove 16 bit instructions)
+; Here 08h indicates that we are loading the Code entry of the GDT table
+	jmp 08h:mode32
 
 
-; This is the 32 bit section
+; This is the 32 bit code section
 [BITS 32]
-xyz:
-	xor edi, edi
-	xor esi,esi
-
+mode32:
+	; First - make sure that the old values of DS etc which corresponds to the
+	; 16 bit real mode, is overwritten with valid segment selectors.
+	; Otherwise this will easily result in Triple Faults
 	mov ax, GDT_DATA_SELECTOR
 	mov ds, ax
 	mov es, ax
+	mov ss, ax
 
 ;==============================================================================================
 
@@ -104,7 +96,7 @@ mov byte [0x000B8000], 'A'
 
 		    mov eax, 4
 		    mov edi, 0x000E0000
-		;   call read_sectors
+		   call read_sectors
 
 		mov al, [0x000E0000]
 		mov [0x000B8020], al
@@ -114,6 +106,9 @@ mov byte [0x000B8000], 'A'
 		mov [0x000B8024], al
 
 		mov byte [0x000B800E], 'Z'
+
+; Start loading Stage 3 here - for now just stop
+	jmp $
 
 		; Reads the sector number (LBA) given in EAX
 		; Memory Location EDI
@@ -161,14 +156,12 @@ mov byte [0x000B8000], 'A'
 		    cld ; set the direction bit
 		    rep insw
 		mov byte [0x000B800C], 'H'
-
-		    ret
-
+		ret
 
 ;==============================================================================================
 
 [BITS 16]
-; GDT Ptr
+; GDT Ptr - Pointer to the GDT Table to be loaded into the GDT Register
 gdtreg:
 	dw gdt_end-gdtable-1
 	dd gdtable

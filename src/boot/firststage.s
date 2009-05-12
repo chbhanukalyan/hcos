@@ -240,11 +240,3 @@ printret:
 ; real bootable drive
 	dw 0xaa55
 
-;==========================================================================
-; This is the second part of the boot loader....
-	; DO NOT USE $ etc as this will be loaded away from the top 512 bytes
-	xor eax,eax
-	mov eax,0xABCDEF01
-	jmp SECOND_STAGE_LOAD_SEGMENT:0
-	times 2048-($-$$) db 0
-

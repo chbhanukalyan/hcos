@@ -22,5 +22,5 @@
 ; first and second stages of the boot loader.
 
 %define SECOND_STAGE_SIZE           1
-%define SECOND_STAGE_LOAD_SEGMENT   05000h
+%define SECOND_STAGE_LOAD_SEGMENT   0500h
 
