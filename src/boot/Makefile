@@ -30,8 +30,7 @@ BOCHSIMAGE	=	bximage
 
 FIRSTSTAGE	=	firststage
 SECONDSTAGE	=	secondstage
-THIRDSTAGE	=	ts
-#THIRDSTAGE	=	thirdstage
+THIRDSTAGE	=	thirdstage
 DISKIMG		=	disk.img
 
 THIRDSTAGE_LOAD_ADDRESS	=	0x000E0000
@@ -44,11 +43,10 @@ $(FIRSTSTAGE): $(FIRSTSTAGE).s defs12.hs
 $(SECONDSTAGE): $(SECONDSTAGE).s defs12.hs harddisk.hs
 	$(NASM) -o $(SECONDSTAGE) $(SECONDSTAGE).s
 
-$(THIRDSTAGE): $(THIRDSTAGE).s
-	$(NASM) -o $(THIRDSTAGE) $(THIRDSTAGE).s
-#	$(GCC) -o $(THIRDSTAGE).o -c $(THIRDSTAGE).c
-#	$(LD) -o $(THIRDSTAGE).out -Ttext $(THIRDSTAGE_LOAD_ADDRESS) -e main $(THIRDSTAGE).o
-#	$(OBJCOPY) -R .note -R .comment -S -O binary $(THIRDSTAGE).out $(THIRDSTAGE)
+$(THIRDSTAGE): $(THIRDSTAGE).c
+	$(GCC) -o $(THIRDSTAGE).o -c $(THIRDSTAGE).c
+	$(LD) -o $(THIRDSTAGE).out -Ttext $(THIRDSTAGE_LOAD_ADDRESS) -e main $(THIRDSTAGE).o
+	$(OBJCOPY) -R .note -R .comment -S -O binary $(THIRDSTAGE).out $(THIRDSTAGE)
 
 $(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE) $(THIRDSTAGE)
 	# If u you change this line, make sure to change bochsrc.txt too
