@@ -25,8 +25,8 @@
 %define		HARD_DISK_PRIMARY_CONTROLER		0x01F0
 %define		HARD_DISK_SECONDARY_CONTROLER   0x0170
 
-; Note that this will read sectors without any limit (0x20 is a more basic version)
-%define		HD_CTRLR_READ_SECTORS		0x24
+; Note that this will read sectors without any limit
+%define		HD_CTRLR_READ_SECTORS		0x20
 %define		HD_CTRLR_WRITE_SECTORS		0x30
 
 ; List of Registers on the hard disk controller, which control what data we

@@ -23,11 +23,18 @@
 
 # Assembler used is NASM
 NASM		=	nasm
+GCC			=	gcc -m32
+LD			=	ld -melf_i386
+OBJCOPY		=	objcopy
 BOCHSIMAGE	=	bximage
 
 FIRSTSTAGE	=	firststage
 SECONDSTAGE	=	secondstage
+THIRDSTAGE	=	ts
+#THIRDSTAGE	=	thirdstage
 DISKIMG		=	disk.img
+
+THIRDSTAGE_LOAD_ADDRESS	=	0x000E0000
 
 all: $(DISKIMG)
 
@@ -37,14 +44,24 @@ $(FIRSTSTAGE): $(FIRSTSTAGE).s defs12.hs
 $(SECONDSTAGE): $(SECONDSTAGE).s defs12.hs harddisk.hs
 	$(NASM) -o $(SECONDSTAGE) $(SECONDSTAGE).s
 
-$(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE)
+$(THIRDSTAGE): $(THIRDSTAGE).s
+	$(NASM) -o $(THIRDSTAGE) $(THIRDSTAGE).s
+#	$(GCC) -o $(THIRDSTAGE).o -c $(THIRDSTAGE).c
+#	$(LD) -o $(THIRDSTAGE).out -Ttext $(THIRDSTAGE_LOAD_ADDRESS) -e main $(THIRDSTAGE).o
+#	$(OBJCOPY) -R .note -R .comment -S -O binary $(THIRDSTAGE).out $(THIRDSTAGE)
+
+$(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE) $(THIRDSTAGE)
 	# If u you change this line, make sure to change bochsrc.txt too
 	-rm -f $(DISKIMG)
 	$(BOCHSIMAGE) -q -hd -mode=flat -size=10240 $(DISKIMG)
+	#dd if=/dev/zero of=$(DISKIMG) bs=1024 count=10240
 	dd if=$(FIRSTSTAGE) of=$(DISKIMG) bs=512 count=1 conv=notrunc
 	dd if=$(SECONDSTAGE) of=$(DISKIMG) bs=512 count=2 seek=1 conv=notrunc
+	dd if=$(THIRDSTAGE) of=$(DISKIMG) bs=512 count=2 seek=4 conv=notrunc
 
 clean:
 	-rm -f $(FIRSTSTAGE)
 	-rm -f $(SECONDSTAGE)
+	-rm -f $(THIRDSTAGE) $(THIRDSTAGE).out $(THIRDSTAGE).o
 	-rm -f $(DISKIMG)
+

@@ -77,7 +77,8 @@ mode32:
 	; First - make sure that the old values of DS etc which corresponds to the
 	; 16 bit real mode, is overwritten with valid segment selectors.
 	; Otherwise this will easily result in Triple Faults
-	mov ax, GDT_DATA_SELECTOR
+;	mov ax, GDT_DATA_SELECTOR
+	mov ax, 0x10
 	mov ds, ax
 	mov es, ax
 	mov ss, ax
@@ -90,28 +91,24 @@ mode32:
 ; us. 
 
 	mov eax, THIRD_STAGE_LOAD_ADDRESS
-	mov ebx, 0x200
+	mov ebx, 0x2000
 	call memset
 
 	mov byte [0x000B8000], 'a'
 
 	mov eax, 4
-	mov bl, 1
+	mov bl, 4
 	mov edi, THIRD_STAGE_LOAD_ADDRESS
 	call read_sectors
 
 	; see whether they actually loaded something
-	mov al, [THIRD_STAGE_LOAD_ADDRESS]
-	mov [0x000B8020], al
-	mov al, [THIRD_STAGE_LOAD_ADDRESS + 1]
-	mov [0x000B8022], al
-	mov al, [THIRD_STAGE_LOAD_ADDRESS + 2]
-	mov [0x000B8024], al
+	mov al, [THIRD_STAGE_LOAD_ADDRESS + 250]
+	mov [0x000B8026], al
 
 		mov byte [0x000B800E], 'Z'
 
 ; Start loading Stage 3 here - for now just stop
-	jmp $
+	jmp THIRD_STAGE_LOAD_ADDRESS
 
 
 ;=========================================================================
@@ -186,7 +183,9 @@ mov byte [0x000B8002], 'B'
 
 	; Set the Device number etc
 	; TODO only first disk for now (0xA0 is 1st disk, 0xB0 is 2nd disk)
-	mov al, 0xA0
+	; 'OR' this with 0x40 to indicate that you are using LBA28 (or 48) mode
+;	mov al, 0xA0
+	mov al, 0xC0
 	mov dx, HDPC_DEVICE_BYTE
 	out dx, al
 
@@ -198,10 +197,16 @@ mov byte [0x000B8002], 'B'
 	out dx, al
 	mov byte [0x000B800A], 'G'
 
-	; Read all 512 bytes into memory
+	; OK now wait for the sector to be read in
+ wait_for_sector:
+	in al,dx
+	test al,8
+	jz wait_for_sector 
+
+	; Now Read all 512 bytes into memory
 	mov ecx, 256	; read upto 512 (256 words) bytes from port
+	cld
 	mov dx, HDPC_DATA_WORD
-	cld ; set the direction bit
 	rep insw
 	
 	mov byte [0x000B800C], 'H'

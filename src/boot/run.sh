@@ -6,5 +6,5 @@ if [ "$?" != "0" ]; then
 	exit 1
 fi
 
-bochs -q -f ../../env/bochsrc_pc_with_nic.cfg
+/usr/local/bin/bochs -q -f ../../env/bochsrc_pc_with_nic.cfg
 
