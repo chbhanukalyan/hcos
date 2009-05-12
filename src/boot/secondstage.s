@@ -77,6 +77,7 @@ mode32:
 	mov byte [0x000B8000], 'a'
 
 	mov eax, 4
+	mov bl, 1
 	mov edi, THIRD_STAGE_LOAD_ADDRESS
 	call read_sectors
 
@@ -164,10 +165,9 @@ mov byte [0x000B8002], 'B'
 	mov byte [0x000B8006], 'E'
 	shr eax, 8
 
-	; Set 25-28 bit etc
 	; Set the Device number etc
-	and eax, 0x0000000F
-	or eax, 0xE0		 ; i.e.E0 = 0x40|0xA0
+	; TODO only first disk for now (0xA0 is 1st disk, 0xB0 is 2nd disk)
+	mov al, 0xA0
 	mov dx, HDPC_DEVICE_BYTE
 	out dx, al
 
