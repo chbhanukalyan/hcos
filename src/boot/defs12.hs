@@ -21,6 +21,7 @@
 ; This contains the include definitions, which are shared between the
 ; first and second stages of the boot loader.
 
-%define SECOND_STAGE_SIZE           1
-%define SECOND_STAGE_LOAD_SEGMENT   0500h
+%define	SECOND_STAGE_SIZE           1
+%define	SECOND_STAGE_LOAD_SEGMENT   0500h
 
+%define	THIRD_STAGE_LOAD_ADDRESS	0x000E0000

@@ -25,6 +25,7 @@
 ; the OS.
 
 %include "defs12.hs"
+%include "harddisk.hs"
 
 [BITS 16]
 [ORG SECOND_STAGE_LOAD_SEGMENT * 0x10]
@@ -62,101 +63,131 @@ mode32:
 	mov es, ax
 	mov ss, ax
 
-;==============================================================================================
+	; Clear the screen
+	call clearscreen
 
-; Define the hard disk controler IDs
-%define     HARD_DISK_PRIMARY_CONTROLER     0x01F0
-%define     HARD_DISK_SECONDARY_CONTROLER   0x0170
+; OK The third stage can be anywhere on the disk, we do not have to rely on
+; the BIOS interrupts which can load only upto 1023 cylinders to get it for
+; us. 
 
-; Note that this will read sectors without any limit (0x20 is a more basic version)
-%define     CMD_READ_SECTORS                0x24
-%define     CMD_WRITE_SECTORS               0x30
+	mov eax, THIRD_STAGE_LOAD_ADDRESS
+	mov ebx, 0x200
+	call memset
 
-%define     HDPC_DATA_WORD              0x01F0
+	mov byte [0x000B8000], 'a'
 
-%define     HDPC_SECTOR_BYTE            0x01F2
-%define     HDPC_LBA_LOW_BYTE           0x01F3
-%define     HDPC_LBA_MID_BYTE           0x01F4
-%define     HDPC_LBA_HIGH_BYTE          0x01F5
-%define     HDPC_DEVICE_BYTE            0x01F6
-%define     HDPC_COMMAND_BYTE           0x01F7
+	mov eax, 4
+	mov edi, THIRD_STAGE_LOAD_ADDRESS
+	call read_sectors
 
-
-
-mov byte [0x000B8000], 'A'
-
-    mov eax,0x000E0000
-	bzo:
-	    inc eax
-		    mov byte [eax], 0
-		    cmp eax, 0x000E0200
-		    jnz bzo
-
-		mov byte [0x000B8000], 'a'
-
-		    mov eax, 4
-		    mov edi, 0x000E0000
-		   call read_sectors
-
-		mov al, [0x000E0000]
-		mov [0x000B8020], al
-		mov al, [0x000E0001]
-		mov [0x000B8022], al
-		mov al, [0x000E0002]
-		mov [0x000B8024], al
+	; see whether they actually loaded something
+	mov al, [THIRD_STAGE_LOAD_ADDRESS]
+	mov [0x000B8020], al
+	mov al, [THIRD_STAGE_LOAD_ADDRESS + 1]
+	mov [0x000B8022], al
+	mov al, [THIRD_STAGE_LOAD_ADDRESS + 2]
+	mov [0x000B8024], al
 
 		mov byte [0x000B800E], 'Z'
 
 ; Start loading Stage 3 here - for now just stop
 	jmp $
 
-		; Reads the sector number (LBA) given in EAX
-		; Memory Location EDI
-		; number of sectos - BL
-		read_sectors:
-		    ; Set Registers one by one
 
-		    ; Set Sector Count
-		    mov al, bl
-		    mov dx, HDPC_SECTOR_BYTE
-		    out dx, al
-		mov byte [0x000B8002], 'B'
-		    ; Set 24 bit LBA
-		    mov dx, HDPC_LBA_LOW_BYTE
+;=========================================================================
+; clearscreen - clears the screen
+; Screen typically has alternating color and character bytes. So color
+; bytes must be set to sane values, not zero.
+clearscreen:
+	mov eax, 0x000B8000
+	mov ebx, 0xF00
+	call memset
 
-    out dx , al
+	; Set color bytes to sane values
+	mov eax, 0x000B8001
+next_color_byte:
+	add eax, 0x2
+	mov byte [eax], 0x0F
+	cmp eax, ebx
+	jle next_color_byte
+
+	ret
+
+;=========================================================================
+; memset - basically zeros out the memory location specified in eax, upto
+; the count specified in ebx
+
+memset:
+	add ebx, eax
+next_byte:
+	cmp eax, ebx
+	jz memset_over
+	mov byte [eax], 0
+	inc eax
+	jmp next_byte
+memset_over:
+	ret
+
+
+;==========================================================================
+; This routine simply reads the data from the Disk and loads it into 
+; the memory location specified.
+;
+; Reads the sector number (LBA) given in EAX
+; Memory Location EDI
+; number of sectos - BL
+
+read_sectors:
+	; Set Registers one by one
+
+	; Set Sector Count
+	mov al, bl
+	mov dx, HDPC_SECTOR_BYTE
+	out dx, al
+
+mov byte [0x000B8002], 'B'
+
+	; Set 24 bit LBA
+	mov dx, HDPC_LBA_LOW_BYTE
+	out dx , al
 	mov byte [0x000B8004], 'C'
-	    shr eax, 8
-		    mov dx, HDPC_LBA_MID_BYTE
-		    out dx, al
-		mov byte [0x000B8000], 'D'
-		    shr eax, 8
-		    mov dx, HDPC_LBA_HIGH_BYTE
-		    out dx, al
-		mov byte [0x000B8006], 'E'
-		    shr eax, 8
 
-		    ; Set 25-28 bit etc
-		    ; Set the Device number etc
-		    and eax, 0x0000000F
-		    or eax, 0xE0         ; i.e.E0 = 0x40|0xA0
-		    mov dx, HDPC_DEVICE_BYTE
-		    out dx, al
-		mov byte [0x000B8008], 'F'
+	shr eax, 8
+	mov dx, HDPC_LBA_MID_BYTE
+	out dx, al
+	mov byte [0x000B8000], 'D'
+	
+	shr eax, 8
+	mov dx, HDPC_LBA_HIGH_BYTE
+	out dx, al
+	
+	mov byte [0x000B8006], 'E'
+	shr eax, 8
 
-		    ; Send Command
-		    mov al, CMD_READ_SECTORS
-		    mov dx, HDPC_COMMAND_BYTE
-		    out  dx, al
-		mov byte [0x000B800A], 'G'
+	; Set 25-28 bit etc
+	; Set the Device number etc
+	and eax, 0x0000000F
+	or eax, 0xE0		 ; i.e.E0 = 0x40|0xA0
+	mov dx, HDPC_DEVICE_BYTE
+	out dx, al
 
-		    ; Read all 512 bytes into memory
-		    mov ecx, 256    ; read upto 512 (256 words) bytes from port
-		    mov dx, HDPC_DATA_WORD
-		    cld ; set the direction bit
-		    rep insw
-		mov byte [0x000B800C], 'H'
-		ret
+	mov byte [0x000B8008], 'F'
+
+	; Send Command
+	mov al, HD_CTRLR_READ_SECTORS
+	mov dx, HDPC_COMMAND_BYTE
+	out dx, al
+	mov byte [0x000B800A], 'G'
+
+	; Read all 512 bytes into memory
+	mov ecx, 256	; read upto 512 (256 words) bytes from port
+	mov dx, HDPC_DATA_WORD
+	cld ; set the direction bit
+	rep insw
+	
+	mov byte [0x000B800C], 'H'
+
+	ret
 
 ;==============================================================================================
 
