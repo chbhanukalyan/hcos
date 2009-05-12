@@ -39,16 +39,35 @@ start:
 	; mov on to more imp work
 	cli
 
+	; Enable the A20 Address line
+	; A20 is a vestige from the DOS era, where ppl though that 1MB is all
+	; the main memory you will *ever* need. So to enable the higher memory
+	; locations the A20 (the 21st address line to the memory needs to be
+	; enabled. If not more than 1MB cannot be accessed or it might loop
+	; around to lower addresses based on the hardware). Controlling this 
+	; line was traditionally done through the Keyboard controller which is
+	; stupid. So newer systems will have a fast A20 gate option, which will
+	; directly enable it from the chipset. I am implementing only the 
+	; Fast A20 switch only here, which is pretty simple
+	in al, 0x92
+	or al, 2
+	out 0x92, al
+
+	; Load the GDT register with the location of the GDT table in memory
 	lgdt [gdtreg]
 
-	xor eax,eax
-	mov ax, 0x0001
-	lmsw ax
+	; This is the standard way of enabling protected mode (other way is to
+	; use the lmsw instruction). Basically set the bit '0' of the CR0 
+	; control register of the processor to make it move to protected mode.
+	mov eax, cr0
+	or  eax, 1
+	mov cr0, eax
 
-; Long jump into a 32 bit mode. This is required to be a long jump as
-; the x86 ISA documentation clearly mentions that the instruction prefect
-; queue must be flushed (to remove 16 bit instructions)
-; Here 08h indicates that we are loading the Code entry of the GDT table
+	; Long jump into a 32 bit mode. This is required to be a long jump as
+	; the x86 ISA documentation clearly mentions that the instruction prefetch
+	; queue must be flushed (to remove 16 bit instructions)
+	; Here 08h indicates that we are loading the Code entry of the GDT table 
+	; into the CS register to indicate the selector.
 	jmp 08h:mode32
 
 
