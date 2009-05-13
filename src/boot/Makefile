@@ -24,7 +24,7 @@
 # Assembler used is NASM
 NASM		=	nasm
 GCC			=	gcc
-GCC_FLAGS	=	-m32 -nostdinc -nodefaultlibs -nostartfiles -nostdlib
+GCC_FLAGS	=	-Wall -Werror -m32 -nostdinc -nodefaultlibs -nostartfiles -nostdlib
 LD			=	ld
 LD_FLAGS	=	-melf_i386 -nostdlib -nodefaultlibs -nostartfiles
 OBJCOPY		=	objcopy
