@@ -24,10 +24,21 @@
  */
 
 void clearscreen(void);
+void print_msg(const char *msg, int *loc);
+int strlen(const char *str);
+
 int main(void)
 {
+	int loc = 0;
+	char welcome_msg[100] = "Welcome to HolyCow OS - Third Stage!!";
+	char msg2[100] = "How Now Brown Cow!";
+
 	clearscreen();
-	__asm__("movl $0xDEADBEAF, %eax");
+
+	print_msg(welcome_msg, &loc);
+	loc += 38;
+	print_msg(msg2, &loc);
+
 	__asm__("movl $0xB1DBADBD, %eax");
 
 	/* Do stuff here */
@@ -36,8 +47,15 @@ int main(void)
 	while (1);
 }
 
-#define	VID_MEM_ADDR	0x000B8000
+#define	VID_MEM_ADDR	((void*)0x000B8000)
 #define	VID_MEM_LEN		0xF00
+
+int strlen(const char *str)
+{
+	int i;
+	for (i = 0; str[i]; i++);
+	return i;
+}
 
 void clearscreen(void)
 {
@@ -51,4 +69,18 @@ void clearscreen(void)
 	}
 }
 
+#define		SCREEN_WIDTH	80
+#define		SCREEN_HEIGHT	24
+
+void print_msg(const char *msg, int *loc)
+{
+	int i;
+	int len = strlen(msg);
+	char *ptr = VID_MEM_ADDR + 2*(*loc);
+
+	for (i = 0; i < 2 * len; i += 2) {
+		/* Zero out the character */
+		*(ptr + i) = msg[i/2];
+	}
+}
 

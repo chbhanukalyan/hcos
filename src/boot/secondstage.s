@@ -107,7 +107,10 @@ mode32:
 
 		mov byte [0x000B800E], 'Z'
 
-; Start loading Stage 3 here - for now just stop
+	; Setup the stack segment etc
+	mov ebp, 0x01FFFFFF
+	mov esp, 0x01FFFFFF
+	; Start loading Stage 3 here
 	jmp THIRD_STAGE_LOAD_ADDRESS
 
 
