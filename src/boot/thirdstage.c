@@ -26,19 +26,19 @@
 void clearscreen(void);
 void print_msg(const char *msg, int *loc);
 int strlen(const char *str);
+void *memset(void *s, int c, int n);
 
 void hcos_entry(void) __attribute__ ((noreturn));
 
 void hcos_entry(void)
 {
 	int loc = 0;
-	char welcome_msg[100] = "Welcome to HolyCow OS - Third Stage!!";
-	char msg2[100] = "How Now Brown Cow!";
+	char welcome_msg[] = "Welcome to HolyCow OS - Third Stage!!";
+	char msg2[] = "How Now Brown Cow!";
 
 	clearscreen();
 
 	print_msg(welcome_msg, &loc);
-	loc += 38;
 	print_msg(msg2, &loc);
 
 	__asm__("movl $0xB1DBADBD, %eax");
@@ -49,8 +49,13 @@ void hcos_entry(void)
 	while (1);
 }
 
-#define	VID_MEM_ADDR	((void*)0x000B8000)
-#define	VID_MEM_LEN		0xF00
+void *memset(void *s, int c, int n)
+{
+	int i;
+	for (i = 0; i < n; i++)
+		*(char*)s = n;
+	return s;
+}
 
 int strlen(const char *str)
 {
@@ -58,6 +63,9 @@ int strlen(const char *str)
 	for (i = 0; str[i]; i++);
 	return i;
 }
+
+#define	VID_MEM_ADDR	((void*)0x000B8000)
+#define	VID_MEM_LEN		0xF00
 
 void clearscreen(void)
 {
@@ -81,8 +89,9 @@ void print_msg(const char *msg, int *loc)
 	char *ptr = VID_MEM_ADDR + 2*(*loc);
 
 	for (i = 0; i < 2 * len; i += 2) {
-		/* Zero out the character */
 		*(ptr + i) = msg[i/2];
 	}
+
+	*loc += strlen(msg) + 1;
 }
 

@@ -23,8 +23,10 @@
 
 # Assembler used is NASM
 NASM		=	nasm
-GCC			=	gcc -m32
-LD			=	ld -melf_i386
+GCC			=	gcc
+GCC_FLAGS	=	-m32 -nostdinc -nodefaultlibs -nostartfiles -nostdlib
+LD			=	ld
+LD_FLAGS	=	-melf_i386 -nostdlib -nodefaultlibs -nostartfiles
 OBJCOPY		=	objcopy
 BOCHSIMAGE	=	bximage
 
@@ -47,8 +49,8 @@ $(SECONDSTAGE): $(SECONDSTAGE).s defs12.hs harddisk.hs
 	$(NASM) -o $(SECONDSTAGE) $(SECONDSTAGE).s
 
 $(THIRDSTAGE): $(THIRDSTAGE).c
-	$(GCC) -o $(THIRDSTAGE).o -c $(THIRDSTAGE).c
-	$(LD) -o $(THIRDSTAGE).out -Ttext $(THIRDSTAGE_LOAD_ADDRESS) -Tdata $(THIRDSTAGE_DATA_ADDRESS) -Tbss $(THIRDSTAGE_BSS_ADDRESS) -e $(THIRD_STAGE_ENTRYPOINT) $(THIRDSTAGE).o
+	$(GCC) -o $(THIRDSTAGE).o $(GCC_FLAGS) -c $(THIRDSTAGE).c
+	$(LD) $(LD_FLAGS) -o $(THIRDSTAGE).out -Ttext $(THIRDSTAGE_LOAD_ADDRESS) -Tdata $(THIRDSTAGE_DATA_ADDRESS) -Tbss $(THIRDSTAGE_BSS_ADDRESS) -e $(THIRD_STAGE_ENTRYPOINT) $(THIRDSTAGE).o
 	$(OBJCOPY) -R .note -R .comment -S -O binary $(THIRDSTAGE).out $(THIRDSTAGE)
 
 $(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE) $(THIRDSTAGE)
