@@ -27,7 +27,9 @@ void clearscreen(void);
 void print_msg(const char *msg, int *loc);
 int strlen(const char *str);
 
-int main(void)
+void hcos_entry(void) __attribute__ ((noreturn));
+
+void hcos_entry(void)
 {
 	int loc = 0;
 	char welcome_msg[100] = "Welcome to HolyCow OS - Third Stage!!";
