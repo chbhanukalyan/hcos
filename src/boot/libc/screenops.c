@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009  Bhanu Chetlapalli
+ * Copyright (C) 2011  Bhanu Chetlapalli
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,31 +19,51 @@
  * This File is a part of the Holy Cow Operating System, which is written and
  * maintained by Bhanu Kalyan Chetlapalli <chbhanukalyan@gmail.com>.
  *
- * This contains the Third stage of the bootloader, and essentially does
- * all important stuff like enabling paging, setting up IDTs etc.
+ * This file contains the various generic function definitions
  */
 
-#include <stddefs.h>
+#include "stddefs.h"
 
-void enable_paging(void);
-void hcos_entry(void) __attribute__ ((noreturn));
+#define	VID_MEM_ADDR	((void*)0x000B8000)
+#define	VID_MEM_LEN		0xF00
 
-void hcos_entry(void)
+int loc = 0;
+
+void clearscreen(void)
 {
-	char welcome_msg[] = "Welcome to HolyCow OS - Third Stage!!\n";
-
-	clearscreen();
-
-	print_msg(welcome_msg);
-
-	/* Do stuff here */
-	enable_paging();
-	print_msg(welcome_msg);
-	__asm__("movl $0xB1DBADBD, %eax");
-
-
-	/* OK halt the system here */
-	while (1);
+	int i;
+	char *ptr = VID_MEM_ADDR;
+	for (i = 0; i < VID_MEM_LEN; i += 2) {
+		/* Zero out the character */
+		*(ptr + i) = 0x0;
+		/* Print a sane value for screen color though */
+		*(ptr + i + 1) = 0x0F;
+	}
+	loc = 0;
 }
 
+#define		SCREEN_WIDTH	80
+#define		SCREEN_HEIGHT	24
+#define		LINE_WIDTH		(SCREEN_WIDTH)
+
+void print_msg(const char *msg)
+{
+	int i, j;
+	int len = strlen(msg);
+	char *ptr = VID_MEM_ADDR + 2*loc;
+
+	for (i = 0, j = 0; j < len; j++) {
+		switch (msg[j]) {
+			case '\n':
+				i = ((i + LINE_WIDTH) / LINE_WIDTH) * LINE_WIDTH;
+				break;
+			default:
+				*(ptr + i) = msg[j];
+				i += 2;
+				break;
+		}
+	}
+
+	loc += i;
+}
 

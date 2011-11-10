@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009  Bhanu Chetlapalli
+ * Copyright (C) 2011  Bhanu Chetlapalli
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,31 +19,19 @@
  * This File is a part of the Holy Cow Operating System, which is written and
  * maintained by Bhanu Kalyan Chetlapalli <chbhanukalyan@gmail.com>.
  *
- * This contains the Third stage of the bootloader, and essentially does
- * all important stuff like enabling paging, setting up IDTs etc.
+ * This file contains the various generic function declarations
  */
 
-#include <stddefs.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void enable_paging(void);
-void hcos_entry(void) __attribute__ ((noreturn));
+extern void clearscreen(void);
+extern void print_msg(const char *msg);
+extern int strlen(const char *str);
+extern void *memset(void *s, int c, int n);
 
-void hcos_entry(void)
-{
-	char welcome_msg[] = "Welcome to HolyCow OS - Third Stage!!\n";
-
-	clearscreen();
-
-	print_msg(welcome_msg);
-
-	/* Do stuff here */
-	enable_paging();
-	print_msg(welcome_msg);
-	__asm__("movl $0xB1DBADBD, %eax");
-
-
-	/* OK halt the system here */
-	while (1);
+#ifdef __cplusplus
 }
-
+#endif
 

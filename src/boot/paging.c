@@ -21,14 +21,11 @@
  *
  * This file contains the various functions require to enable paging
  */
-void clearscreen(void);
-void print_msg(const char *msg, int *loc);
-int strlen(const char *str);
-void *memset(void *s, int c, int n);
 
-void enable_paging(void *loc)
+#include <stddefs.h>
+
+void enable_paging(void)
 {
-	print_msg("Enabling Paging.", loc);
-//	while(1);
+	print_msg("Enabling Paging.");
 }
 

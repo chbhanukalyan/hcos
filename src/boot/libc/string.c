@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009  Bhanu Chetlapalli
+ * Copyright (C) 2011  Bhanu Chetlapalli
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,31 +19,23 @@
  * This File is a part of the Holy Cow Operating System, which is written and
  * maintained by Bhanu Kalyan Chetlapalli <chbhanukalyan@gmail.com>.
  *
- * This contains the Third stage of the bootloader, and essentially does
- * all important stuff like enabling paging, setting up IDTs etc.
+ * This file contains the various generic memory/string operations
  */
 
-#include <stddefs.h>
+#include "stddefs.h"
 
-void enable_paging(void);
-void hcos_entry(void) __attribute__ ((noreturn));
-
-void hcos_entry(void)
+int strlen(const char *str)
 {
-	char welcome_msg[] = "Welcome to HolyCow OS - Third Stage!!\n";
-
-	clearscreen();
-
-	print_msg(welcome_msg);
-
-	/* Do stuff here */
-	enable_paging();
-	print_msg(welcome_msg);
-	__asm__("movl $0xB1DBADBD, %eax");
-
-
-	/* OK halt the system here */
-	while (1);
+	int i;
+	for (i = 0; str[i]; i++);
+	return i;
 }
 
+void *memset(void *s, int c, int n)
+{
+	int i;
+	for (i = 0; i < n; i++)
+		*(char*)s = n;
+	return s;
+}
 
