@@ -28,22 +28,23 @@ void print_msg(const char *msg, int *loc);
 int strlen(const char *str);
 void *memset(void *s, int c, int n);
 
+void enable_paging(int *);
 void hcos_entry(void) __attribute__ ((noreturn));
 
 void hcos_entry(void)
 {
 	int loc = 0;
 	char welcome_msg[] = "Welcome to HolyCow OS - Third Stage!!\n";
-	char msg2[] = "How Now Brown Cow!";
 
 	clearscreen();
 
 	print_msg(welcome_msg, &loc);
-	print_msg(msg2, &loc);
-
-	__asm__("movl $0xB1DBADBD, %eax");
 
 	/* Do stuff here */
+	enable_paging(&loc);
+	print_msg(welcome_msg, &loc);
+	__asm__("movl $0xB1DBADBD, %eax");
+
 
 	/* OK halt the system here */
 	while (1);
