@@ -35,7 +35,7 @@ SECONDSTAGE	=	secondstage
 THIRDSTAGE	=	thirdstage
 DISKIMG		=	disk.img
 
-THIRDSTAGE_LOAD_ADDRESS	=	0x00E00000
+THIRDSTAGE_LOAD_ADDRESS	=	0x00A00000
 THIRDSTAGE_DATA_ADDRESS	=	0x00F00000
 THIRDSTAGE_BSS_ADDRESS	=	0x00F80000
 THIRD_STAGE_ENTRYPOINT	=	hcos_entry
@@ -49,7 +49,7 @@ $(SECONDSTAGE): $(SECONDSTAGE).s defs12.hs harddisk.hs
 	$(NASM) -o $(SECONDSTAGE) $(SECONDSTAGE).s
 
 $(THIRDSTAGE): $(THIRDSTAGE).c
-	$(GCC) -o $(THIRDSTAGE).o $(GCC_FLAGS) -c $(THIRDSTAGE).c
+	$(GCC) -g3 -o $(THIRDSTAGE).o $(GCC_FLAGS) -c $(THIRDSTAGE).c
 	$(LD) $(LD_FLAGS) -o $(THIRDSTAGE).out -Ttext $(THIRDSTAGE_LOAD_ADDRESS) -Tdata $(THIRDSTAGE_DATA_ADDRESS) -Tbss $(THIRDSTAGE_BSS_ADDRESS) -e $(THIRD_STAGE_ENTRYPOINT) $(THIRDSTAGE).o
 	$(OBJCOPY) -R .note -R .comment -S -O binary $(THIRDSTAGE).out $(THIRDSTAGE)
 
@@ -60,7 +60,7 @@ $(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE) $(THIRDSTAGE)
 	#dd if=/dev/zero of=$(DISKIMG) bs=1024 count=10240
 	dd if=$(FIRSTSTAGE) of=$(DISKIMG) bs=512 count=1 conv=notrunc
 	dd if=$(SECONDSTAGE) of=$(DISKIMG) bs=512 count=2 seek=1 conv=notrunc
-	dd if=$(THIRDSTAGE) of=$(DISKIMG) bs=512 count=2 seek=4 conv=notrunc
+	dd if=$(THIRDSTAGE) of=$(DISKIMG) bs=512 count=3 seek=4 conv=notrunc
 
 clean:
 	-rm -f $(FIRSTSTAGE)

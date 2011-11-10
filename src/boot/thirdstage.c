@@ -84,14 +84,18 @@ void clearscreen(void)
 
 void print_msg(const char *msg, int *loc)
 {
-	int i;
+	int i, j;
 	int len = strlen(msg);
 	char *ptr = VID_MEM_ADDR + 2*(*loc);
 
-	for (i = 0; i < 2 * len; i += 2) {
-		*(ptr + i) = msg[i/2];
+	for (i = 0, j = 0; j < len; i += 2, j++) {
+		switch (msg[j]) {
+			default:
+				*(ptr + i) = msg[j];
+				break;
+		}
 	}
 
-	*loc += strlen(msg) + 1;
+	*loc += i;
 }
 
