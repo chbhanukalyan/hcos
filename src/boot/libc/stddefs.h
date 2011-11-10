@@ -30,6 +30,10 @@ extern void clearscreen(void);
 extern void print_msg(const char *msg);
 extern int strlen(const char *str);
 extern void *memset(void *s, int c, int n);
+extern void *memcpy(void *d, const void *s, int n);
+extern char* strncpy(char *d, const char *s, int n);
+
+extern int printf(const char *, ...);
 
 #ifdef __cplusplus
 }

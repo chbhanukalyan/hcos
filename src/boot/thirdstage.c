@@ -34,12 +34,12 @@ void hcos_entry(void)
 
 	clearscreen();
 
-	print_msg(welcome_msg);
+	printf(welcome_msg);
 
 	/* Do stuff here */
 	enable_paging();
-	print_msg(welcome_msg);
-	__asm__("movl $0xB1DBADBD, %eax");
+
+	asm volatile("movl $0xB1DBADBD, %eax");
 
 
 	/* OK halt the system here */

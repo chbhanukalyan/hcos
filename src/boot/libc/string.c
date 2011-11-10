@@ -35,7 +35,28 @@ void *memset(void *s, int c, int n)
 {
 	int i;
 	for (i = 0; i < n; i++)
-		*(char*)s = n;
+		*(unsigned char*)(s+i) = (unsigned char)c;
 	return s;
+}
+
+void *memcpy(void *d, const void *s, int n)
+{
+	int i;
+	for (i = 0; i < n; i++)
+		*(unsigned char*)(d+i) = *(const unsigned char*)(s+i);
+	return d;
+}
+
+char* strncpy(char *d, const char *s, int n)
+{
+	int i;
+	char *dst = d;
+	for (i = 0; i < n; i++) {
+		*d = *s;
+		if (*s == '\0')
+			break;
+		s++, d++;
+	}
+	return dst;
 }
 

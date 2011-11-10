@@ -24,8 +24,32 @@
 
 #include <stddefs.h>
 
+#define	PAGE_SIZE	0x00001000
+
+#define	PDE_ADDR	0x00B00000
+
+/* Page Directory */
+typedef struct {
+	unsigned int pde[1024];
+} PageDir;
+
+typedef struct {
+	unsigned int pte[1024];
+} PageTable;
+
 void enable_paging(void)
 {
-	print_msg("Enabling Paging.");
+	printf("Enabling Paging.");
+
+	PageDir *pd = (PageDir*)PDE_ADDR;
+	memset(pd, 0, PAGE_SIZE);
+
+	return;
+
+
+	/* Set Bit 31 of CR0 to enable Paging */
+	asm volatile("movl %cr0, %eax\n\t"
+			"orl $0x80000000, %eax \n\t"
+			"movl %eax, %cr0 \n\t");
 }
 
