@@ -31,14 +31,18 @@ $(FIRSTSTAGE): $(FIRSTSTAGE).s defs12.hs
 $(SECONDSTAGE): $(SECONDSTAGE).s defs12.hs harddisk.hs
 	$(NASM) -o $(SECONDSTAGE) $(SECONDSTAGE).s
 
-libc/libc.a:
-	make -C libc
+LIBS	:=	libc/libc.a		\
 
-$(THIRDSTAGE): $(THIRDSTAGE).c paging.c libc/libc.a
-	$(CC) -o $(THIRDSTAGE).o $(CC_FLAGS) -c $(THIRDSTAGE).c
-	$(CC) -o paging.o $(CC_FLAGS) -c paging.c
-	$(LD) $(LD_FLAGS) -o $(THIRDSTAGE).out -Ttext $(THIRDSTAGE_LOAD_ADDRESS) -Tdata $(THIRDSTAGE_DATA_ADDRESS) -Tbss $(THIRDSTAGE_BSS_ADDRESS)  -e $(THIRD_STAGE_ENTRYPOINT) $(THIRDSTAGE).o paging.o libc/libc.a
+OBJS	:=	thirdstage.o	\
+			paging.o		\
+
+$(THIRDSTAGE): $(OBJS) $(LIBS)
+	$(LD) $(LD_FLAGS) -o $(THIRDSTAGE).out -Ttext $(THIRDSTAGE_LOAD_ADDRESS) -Tdata $(THIRDSTAGE_DATA_ADDRESS) -Tbss $(THIRDSTAGE_BSS_ADDRESS)  -e $(THIRD_STAGE_ENTRYPOINT) $(OBJS) $(LIBS)
 	$(OBJCOPY) -R .note -R .comment -S -O binary $(THIRDSTAGE).out $(THIRDSTAGE)
+
+# Generic suffix rule to compile C files					
+.c.o:
+	$(CC) -o $@ $(CC_FLAGS) -c $<
 
 $(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE) $(THIRDSTAGE)
 	# If u you change this line, make sure to change bochsrc.txt too
@@ -49,9 +53,14 @@ $(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE) $(THIRDSTAGE)
 	dd if=$(SECONDSTAGE) of=$(DISKIMG) bs=512 count=2 seek=1 conv=notrunc
 	dd if=$(THIRDSTAGE) of=$(DISKIMG) bs=512 count=3 seek=4 conv=notrunc
 
+# Libraries
+libc/libc.a:
+	make -C libc
+
 clean:
 	-rm -f $(FIRSTSTAGE)
 	-rm -f $(SECONDSTAGE)
-	-rm -f $(THIRDSTAGE) $(THIRDSTAGE).out $(THIRDSTAGE).o
+	-rm -f $(THIRDSTAGE) $(THIRDSTAGE).out
+	-rm -f $(OBJS)
 	-rm -f $(DISKIMG)
 	make -C libc clean

@@ -44,6 +44,7 @@ void hcos_entry(void)
 	printf("Stack Value = %p\n", &ptr);
 	printf("Data Value = %p\n", &data_var);
 	printf("BSS Value = %p\n", &bss_var);
+	printf("Data actual Value = %x\n", data_var);
 
 	/* Do stuff here */
 	enable_paging();
