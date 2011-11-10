@@ -160,10 +160,6 @@ memset_over:
 read_sectors:
 	; Set Registers one by one
 
-	; Set Sector Count
-	mov al, bl
-	mov dx, HDPC_SECTOR_BYTE
-	out dx, al
 
 mov byte [0x000B8002], 'B'
 
@@ -183,6 +179,11 @@ mov byte [0x000B8002], 'B'
 	
 	mov byte [0x000B8006], 'E'
 	shr eax, 8
+
+	; Set Sector Count
+	mov al, bl
+	mov dx, HDPC_SECTOR_BYTE
+	out dx, al
 
 	; Set the Device number etc
 	; TODO only first disk for now (0xA0 is 1st disk, 0xB0 is 2nd disk)
@@ -207,7 +208,7 @@ mov byte [0x000B8002], 'B'
 	jz wait_for_sector 
 
 	; Now Read all 512 bytes into memory
-	mov ecx, 256	; read upto 512 (256 words) bytes from port
+	mov ecx, 4*256	; read upto 512 (256 words) bytes from port
 	cld
 	mov dx, HDPC_DATA_WORD
 	rep insw

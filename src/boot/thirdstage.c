@@ -33,7 +33,7 @@ void hcos_entry(void) __attribute__ ((noreturn));
 void hcos_entry(void)
 {
 	int loc = 0;
-	char welcome_msg[] = "Welcome to HolyCow OS - Third Stage!!";
+	char welcome_msg[] = "Welcome to HolyCow OS - Third Stage!!\n";
 	char msg2[] = "How Now Brown Cow!";
 
 	clearscreen();
@@ -81,6 +81,7 @@ void clearscreen(void)
 
 #define		SCREEN_WIDTH	80
 #define		SCREEN_HEIGHT	24
+#define		LINE_WIDTH		(SCREEN_WIDTH)
 
 void print_msg(const char *msg, int *loc)
 {
@@ -88,10 +89,14 @@ void print_msg(const char *msg, int *loc)
 	int len = strlen(msg);
 	char *ptr = VID_MEM_ADDR + 2*(*loc);
 
-	for (i = 0, j = 0; j < len; i += 2, j++) {
+	for (i = 0, j = 0; j < len; j++) {
 		switch (msg[j]) {
+			case '\n':
+				i = ((i + LINE_WIDTH) / LINE_WIDTH) * LINE_WIDTH;
+				break;
 			default:
 				*(ptr + i) = msg[j];
+				i += 2;
 				break;
 		}
 	}
