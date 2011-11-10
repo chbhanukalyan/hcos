@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009  Bhanu Chetlapalli
+ * Copyright (C) 2011  Bhanu Chetlapalli
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,40 +19,57 @@
  * This File is a part of the Holy Cow Operating System, which is written and
  * maintained by Bhanu Kalyan Chetlapalli <chbhanukalyan@gmail.com>.
  *
- * This contains the Third stage of the bootloader, and essentially does
- * all important stuff like enabling paging, setting up IDTs etc.
+ * This file contains the various printf function definitions
  */
 
-#include <stddefs.h>
+#include "stddefs.h"
 
-void enable_paging(void);
-void hcos_entry(void) __attribute__ ((noreturn));
-
-int data_var = 0xDEADBEEF;
-static int bss_var;
-
-void hcos_entry(void)
+int hex_to_str(unsigned int *pval, char *s)
 {
-	char welcome_msg[] = "Welcome to HolyCow OS - Third Stage!!\n";
+	unsigned int v = *pval;
 
-	clearscreen();
-
-	printf(welcome_msg);
-	int ptr;
-
-	printf("Code Value = %p\n", &hcos_entry);
-	printf("Stack Value = %p\n", &ptr);
-	printf("Data Value = %p\n", &data_var);
-	printf("BSS Value = %p\n", &bss_var);
-
-	/* Do stuff here */
-	enable_paging();
-
-	asm volatile("movl $0xB1DBADBD, %eax");
-
-
-	/* OK halt the system here */
-	while (1);
+	int i;
+	s[0] = '0';
+	s[1] = 'x';
+	for (i = 0; i < 8; i++) {
+		int n = (v & 0xF0000000) >> 28;
+		s[i+2] = n + ((n < 10) ? '0' : 'A' - 10);
+		v <<= 4;
+	}
+	return i + 2;
 }
 
+int printf(const char *s, ...)
+{
+	int i, j;
+	char b[256];
+
+	/* Access other variables from stack */
+	unsigned int *stackptr = (void*)&s;
+
+	for (i = 0, j = 0; j < 200;) {
+		if (s[i] == '%') {
+			i++;
+			switch (s[i]) {
+				case 'x':
+				case 'p':
+					j += hex_to_str(++stackptr, &b[j]);
+					i++;
+					break;
+				case '%':
+					b[j++] = '%';
+					break;
+				default:
+					break;
+			}
+		} else {
+			b[j++] = s[i++];
+		}
+	}
+	b[255] = '\0';
+
+	print_msg(b);
+
+	return 0;
+}
 

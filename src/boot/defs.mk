@@ -24,7 +24,7 @@
 # Assembler used is NASM
 NASM		=	nasm
 CC			=	x86_64-redhat-linux-gcc
-CC_FLAGS	=	-Ilibc -g3 -Wall -Werror -m32 -nostdinc -nodefaultlibs -nostartfiles -nostdlib
+CC_FLAGS	=	-Ilibc -g3 -Wall -Werror -m32 -nostdinc -nodefaultlibs -nostartfiles -nostdlib -fno-builtin
 LD			=	ld
 LD_FLAGS	=	-melf_i386 -nostdlib -nodefaultlibs -nostartfiles
 AR			=	ar

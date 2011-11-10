@@ -39,10 +39,12 @@ typedef struct {
 
 void enable_paging(void)
 {
-	printf("Enabling Paging.");
+	printf("Enabling Paging...\n");
 
 	PageDir *pd = (PageDir*)PDE_ADDR;
 	memset(pd, 0, PAGE_SIZE);
+
+	printf("PDptr = %p", pd);
 
 	return;
 
