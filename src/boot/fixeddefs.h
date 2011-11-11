@@ -19,30 +19,18 @@
  * This File is a part of the Holy Cow Operating System, which is written and
  * maintained by Bhanu Kalyan Chetlapalli <chbhanukalyan@gmail.com>.
  *
- * This file contains the various generic function declarations
+ * This file contains the various FIXED addresses macros etc
  */
 
-#ifndef __LIBC_STDDEFS_H__
-#define __LIBC_STDDEFS_H__
+#ifndef __FIXEDDEFS_H__
+#define __FIXEDDEFS_H__
 
 #include <types.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define	THIRD_STAGE_LOAD_ADDRESS	0x00A00000
+#define	THIRD_STAGE_DATA_ADDRESS	0x00B00000
+#define	THIRD_STAGE_BSS_ADDRESS		0x00B80000
+#define	THIRD_STAGE_STACK_ADDRESS	0x02000000
 
-extern void clearscreen(void);
-extern void print_msg(const char *msg);
-extern int strlen(const char *str);
-extern void *memset(void *s, int c, int n);
-extern void *memcpy(void *d, const void *s, int n);
-extern char* strncpy(char *d, const char *s, int n);
-
-extern int printf(const char *, ...);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __LIBC_STDDEFS_H__ */
+#endif /* __FIXEDDEFS_H__ */
 

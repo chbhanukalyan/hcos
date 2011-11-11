@@ -23,19 +23,133 @@
  */
 
 #include <stddefs.h>
+#include <fixeddefs.h>
 
-#define	PAGE_SIZE	0x00001000
+#define	PAGE_BITS	12
+#define	PAGE_SIZE	(0x1 << PAGE_BITS)
+#define	PAGE_MASK	(PAGE_SIZE-1)
 
-#define	PDE_ADDR	0x00B00000
 
-/* Page Directory */
+#define	PAGE_DIR_SZ			PAGE_SIZE
+#define	PAGE_DIR_BITSHIFT	22
+#define	PAGE_DIR_OFFSET(p)	((p) >> PAGE_DIR_BITSHIFT)
+#define	PAGE_TBL_SZ			PAGE_SIZE
+#define	PAGE_TBL_BITSHIFT	12
+#define	PAGE_TBL_OFFSET(p)	(((p) >> PAGE_TBL_BITSHIFT) & 0x3FF)
+
+#define	PDE_ADDR	0x00C00000
+
+/* 
+ * Page Directory Entry Format
+ *
+ * From IA32 Manual
+ *
+ * 0 (P) Present; must be 1 to reference a page table
+ * 1 (R/W) Read/write; if 0, writes may not be allowed to the 4-MByte region controlled by
+ * this entry (depends on CPL and CR0.WP; see Section 4.6)
+ * 2 (U/S) User/supervisor; if 0, accesses with CPL=3 are not allowed to the 4-MByte region
+ * controlled by this entry (see Section 4.6)
+ * 3 (PWT) Page-level write-through; indirectly determines the memory type used to access
+ * the page table referenced by this entry (see Section 4.9)
+ * 4 (PCD) Page-level cache disable; indirectly determines the memory type used to access
+ * the page table referenced by this entry (see Section 4.9)
+ * 5 (A) Accessed; indicates whether this entry has been used for linear-address
+ * translation (see Section 4.8)
+ * 6 Ignored
+ * 7 (PS) If CR4.PSE = 1, must be 0 (otherwise, this entry maps a 4-MByte page; see
+ * Table 4-4); otherwise, ignored
+ * 11:8 Ignored
+ * 31:12 Physical address of 4-KByte aligned page table referenced by this entry
+ *
+ */
+#define    PDE_VAL_PRESENT     (0x1 <<  0)
+#define    PDE_VAL_RW          (0x1 <<  1)
+#define    PDE_VAL_USERSUPER   (0x1 <<  2)
+#define    PDE_VAL_WRTTHRGH    (0x1 <<  3)
+#define    PDE_VAL_CACHDISBL   (0x1 <<  4)
+#define    PDE_VAL_ACCESSED    (0x1 <<  5)
+#define    PDE_VAL_4MB_PAGE    (0x1 <<  7)
+
 typedef struct {
-	unsigned int pde[1024];
+	u32 pde[1024];
 } PageDir;
 
+
+
+/*
+ * Format of a 32-Bit Page-Table Entry that Maps a 4-KByte Page
+ *
+ * From IA32 Manual
+ *
+ * 0 (P) Present; must be 1 to map a 4-KByte page
+ * 1 (R/W) Read/write; if 0, writes may not be allowed to the 4-KByte page referenced by
+ * this entry (depends on CPL and CR0.WP; see Section 4.6)
+ * 2 (U/S) User/supervisor; if 0, accesses with CPL=3 are not allowed to the 4-KByte page
+ * referenced by this entry (see Section 4.6)
+ * 3 (PWT) Page-level write-through; indirectly determines the memory type used to access
+ * the 4-KByte page referenced by this entry (see Section 4.9)
+ * 4 (PCD) Page-level cache disable; indirectly determines the memory type used to access
+ * the 4-KByte page referenced by this entry (see Section 4.9)
+ * 5 (A) Accessed; indicates whether software has accessed the 4-KByte page referenced
+ * by this entry (see Section 4.8)
+ * 6 (D) Dirty; indicates whether software has written to the 4-KByte page referenced by
+ * this entry (see Section 4.8)
+ * 7 (PAT) If the PAT is supported, indirectly determines the memory type used to access the
+ * 4-KByte page referenced by this entry (see Section 4.9.2); otherwise, reserved
+ * (must be 0)1
+ * 8 (G) Global; if CR4.PGE = 1, determines whether the translation is global (see Section
+ * 4.10); ignored otherwise
+ * 11:9 Ignored
+ * 31:12 Physical address of the 4-KByte page referenced by this entry
+ */
+
+#define PTE_VAL_PRESENT        (0x1 <<  0)
+#define PTE_VAL_READWRITE      (0x1 <<  1)
+#define PTE_VAL_USERSUPER      (0x1 <<  2)
+#define PTE_VAL_PAGEWRITETHRGH (0x1 <<  3)
+#define PTE_VAL_CACHEDISABLE   (0x1 <<  4)
+#define PTE_VAL_ACCESSED       (0x1 <<  5)
+#define PTE_VAL_DIRTY          (0x1 <<  6)
+#define PTE_VAL_PAT            (0x1 <<  7)
+#define PTE_VAL_GLOBAL         (0x1 <<  8)
+
 typedef struct {
-	unsigned int pte[1024];
+	u32 pte[1024];
 } PageTable;
+
+inline void set_pde(PageDir *pd, u32 actualaddr, u32 ptaddr)
+{
+	pd->pde[PAGE_DIR_OFFSET(actualaddr)] = ptaddr | PDE_VAL_PRESENT | PDE_VAL_RW;
+}
+
+inline void set_pte(PageTable *pt, u32 ptaddr)
+{
+	pt->pte[PAGE_TBL_OFFSET(ptaddr)] = ptaddr | PTE_VAL_PRESENT | PTE_VAL_READWRITE | PTE_VAL_GLOBAL;
+}
+
+/* Layout map
+ *
+ * 0x00A00000 -> code
+ * 0x00B00000 -> Data
+ * 0x00B80000 -> BSS
+ * 0x02000000 -> Stack
+ */
+void setup_pagetables(PageDir *pd)
+{
+	/* Text Segment */
+	PageTable *pt = (void*)pd + PAGE_DIR_SZ;
+	set_pde(pd, THIRD_STAGE_LOAD_ADDRESS, (u32)pt);
+
+	set_pte(pt, THIRD_STAGE_LOAD_ADDRESS);
+	set_pte(pt, THIRD_STAGE_DATA_ADDRESS);
+	set_pte(pt, THIRD_STAGE_BSS_ADDRESS);
+
+	/* Stack Segment - grows down */
+	pt++;
+	set_pde(pd, THIRD_STAGE_STACK_ADDRESS-PAGE_SIZE, (u32)pt);
+	set_pte(pt, THIRD_STAGE_STACK_ADDRESS - PAGE_SIZE);
+
+}
 
 void enable_paging(void)
 {
@@ -44,14 +158,28 @@ void enable_paging(void)
 	PageDir *pd = (PageDir*)PDE_ADDR;
 	memset(pd, 0, PAGE_SIZE);
 
-	printf("PDptr = %p", pd);
+	setup_pagetables(pd);
 
-	return;
+	/* Load Page DIR address */
+	asm volatile("movl %%cr3, %%eax\n\t"
+			"andl $0x00000FFF, %%eax \n\t"
+			"orl %0, %%eax \n\t"
+			"movl %%eax, %%cr3 \n\t"
+			:
+			: "r" (pd)
+			:"eax");
+
+	printf("PDptr = %p", pd);
 
 
 	/* Set Bit 31 of CR0 to enable Paging */
-	asm volatile("movl %cr0, %eax\n\t"
-			"orl $0x80000000, %eax \n\t"
-			"movl %eax, %cr0 \n\t");
+	asm volatile("movl %%cr0, %%eax\n\t"
+			"orl $0x80000000, %%eax \n\t"
+			"movl %%eax, %%cr0 \n\t"
+			:
+			:
+			:"eax");
+
+	return;
 }
 

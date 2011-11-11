@@ -19,30 +19,22 @@
  * This File is a part of the Holy Cow Operating System, which is written and
  * maintained by Bhanu Kalyan Chetlapalli <chbhanukalyan@gmail.com>.
  *
- * This file contains the various generic function declarations
+ * This file contains the various Data type definitions
  */
 
-#ifndef __LIBC_STDDEFS_H__
-#define __LIBC_STDDEFS_H__
-
-#include <types.h>
+#ifndef __LIBC_TYPES_H__
+#define __LIBC_TYPES_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern void clearscreen(void);
-extern void print_msg(const char *msg);
-extern int strlen(const char *str);
-extern void *memset(void *s, int c, int n);
-extern void *memcpy(void *d, const void *s, int n);
-extern char* strncpy(char *d, const char *s, int n);
-
-extern int printf(const char *, ...);
+typedef unsigned int u32;
+typedef unsigned short int u16;
+typedef unsigned char u8;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __LIBC_STDDEFS_H__ */
-
+#endif /* __LIBC_TYPES_H__ */
