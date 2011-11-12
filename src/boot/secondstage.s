@@ -97,7 +97,7 @@ mode32:
 	mov byte [0x000B8000], 'a'
 
 	mov eax, 4
-	mov bl, 4
+	mov bl, 16
 	mov edi, THIRD_STAGE_LOAD_ADDRESS
 	call read_sectors
 

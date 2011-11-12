@@ -51,7 +51,7 @@ $(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE) $(THIRDSTAGE)
 	#dd if=/dev/zero of=$(DISKIMG) bs=1024 count=10240
 	dd if=$(FIRSTSTAGE) of=$(DISKIMG) bs=512 count=1 conv=notrunc
 	dd if=$(SECONDSTAGE) of=$(DISKIMG) bs=512 count=2 seek=1 conv=notrunc
-	dd if=$(THIRDSTAGE) of=$(DISKIMG) bs=512 count=3 seek=4 conv=notrunc
+	dd if=$(THIRDSTAGE) of=$(DISKIMG) bs=512 count=16 seek=4 conv=notrunc
 
 # Libraries
 libc/libc.a:

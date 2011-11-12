@@ -25,10 +25,6 @@
 #include <stddefs.h>
 #include <fixeddefs.h>
 
-#define	PAGE_BITS	12
-#define	PAGE_SIZE	(0x1 << PAGE_BITS)
-#define	PAGE_MASK	(PAGE_SIZE-1)
-
 
 #define	PAGE_DIR_SZ			PAGE_SIZE
 #define	PAGE_DIR_BITSHIFT	22
@@ -117,9 +113,14 @@ typedef struct {
 	u32 pte[1024];
 } PageTable;
 
-inline void set_pde(PageDir *pd, u32 actualaddr, u32 ptaddr)
+inline void set_pde4k(PageDir *pd, u32 actualaddr, u32 ptaddr)
 {
 	pd->pde[PAGE_DIR_OFFSET(actualaddr)] = ptaddr | PDE_VAL_PRESENT | PDE_VAL_RW;
+}
+
+inline void set_pde4m(PageDir *pd, u32 actualaddr, u32 physaddr)
+{
+	pd->pde[PAGE_DIR_OFFSET(actualaddr)] = physaddr | PDE_VAL_PRESENT | PDE_VAL_RW | PDE_VAL_4MB_PAGE;
 }
 
 inline void set_pte(PageTable *pt, u32 ptaddr)
@@ -133,12 +134,22 @@ inline void set_pte(PageTable *pt, u32 ptaddr)
  * 0x00B00000 -> Data
  * 0x00B80000 -> BSS
  * 0x02000000 -> Stack
+ *
+ * Use 4MB Pages
  */
 void setup_pagetables(PageDir *pd)
 {
 	/* Text Segment */
 	PageTable *pt = (void*)pd + PAGE_DIR_SZ;
-	set_pde(pd, THIRD_STAGE_LOAD_ADDRESS, (u32)pt);
+
+	/* Have the first gig of RAM in the 3-4GB of the virtual address space */
+	u32 i;
+	for (i = 0; i < 0x100; i++) {
+		set_pde4m(pd, (i << PAGE_DIR_BITSHIFT) + HCOS_KERNEL_ADDRSPLIT, (i << PAGE_DIR_BITSHIFT));
+		set_pde4m(pd, (i << PAGE_DIR_BITSHIFT), (i << PAGE_DIR_BITSHIFT));
+	}
+
+	set_pde4k(pd, THIRD_STAGE_LOAD_ADDRESS, (u32)pt);
 
 	set_pte(pt, THIRD_STAGE_LOAD_ADDRESS);
 	set_pte(pt, THIRD_STAGE_DATA_ADDRESS);
@@ -146,22 +157,30 @@ void setup_pagetables(PageDir *pd)
 
 	/* Stack Segment - grows down */
 	pt++;
-	set_pde(pd, THIRD_STAGE_STACK_ADDRESS-PAGE_SIZE, (u32)pt);
+	set_pde4k(pd, THIRD_STAGE_STACK_ADDRESS-PAGE_SIZE, (u32)pt);
 	set_pte(pt, THIRD_STAGE_STACK_ADDRESS - PAGE_SIZE);
-
 }
 
 void enable_paging(void)
 {
-	printf("Enabling Paging...\n");
+//	printf("Enabling Paging...\n");
 
 	PageDir *pd = (PageDir*)PDE_ADDR;
 	memset(pd, 0, PAGE_SIZE);
 
 	setup_pagetables(pd);
+	
+	/* SET the PSE Bit (bit 4) to enable 4MB Pages */
+	asm("movl %%cr4, %%eax\n\t"
+			"orl $0x00000010, %%eax \n\t"
+			"movl %%eax, %%cr4 \n\t"
+			:
+			: "r" (pd)
+			:"eax");
+
 
 	/* Load Page DIR address */
-	asm volatile("movl %%cr3, %%eax\n\t"
+	asm("movl %%cr3, %%eax\n\t"
 			"andl $0x00000FFF, %%eax \n\t"
 			"orl %0, %%eax \n\t"
 			"movl %%eax, %%cr3 \n\t"
@@ -169,7 +188,7 @@ void enable_paging(void)
 			: "r" (pd)
 			:"eax");
 
-	printf("PDptr = %p", pd);
+//	printf("PDptr = %p", pd);
 
 
 	/* Set Bit 31 of CR0 to enable Paging */
@@ -179,6 +198,9 @@ void enable_paging(void)
 			:
 			:
 			:"eax");
+
+	printf("Virtual PDptr = %p", pd);
+	printf("Virtual PDptr = %p", (void*)(((u32)pd) & HCOS_KERNEL_ADDRSPLIT));
 
 	return;
 }
