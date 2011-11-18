@@ -34,6 +34,7 @@ $(SECONDSTAGE): $(SECONDSTAGE).s defs12.hs harddisk.hs
 LIBS	:=	libc/libc.a		\
 
 OBJS	:=	thirdstage.o	\
+			interrupts.o	\
 			paging.o		\
 
 $(THIRDSTAGE): $(OBJS) $(LIBS)

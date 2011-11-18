@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009  Bhanu Chetlapalli
+ * Copyright (C) 2011  Bhanu Chetlapalli
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -154,6 +154,7 @@ void setup_pagetables(PageDir *pd)
 	set_pte(pt, THIRD_STAGE_LOAD_ADDRESS);
 	set_pte(pt, THIRD_STAGE_DATA_ADDRESS);
 	set_pte(pt, THIRD_STAGE_BSS_ADDRESS);
+	set_pte(pt, IDTR_BASE_ADDRESS);
 
 	/* Stack Segment - grows down */
 	pt++;

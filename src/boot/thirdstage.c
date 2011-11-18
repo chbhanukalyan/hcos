@@ -24,6 +24,7 @@
  */
 
 #include <stddefs.h>
+#include <interrupts.h>
 
 void enable_paging(void);
 void hcos_entry(void) __attribute__ ((noreturn));
@@ -48,6 +49,8 @@ void hcos_entry(void)
 
 	/* Do stuff here */
 	enable_paging();
+
+	setup_idt();
 
 	asm volatile("movl $0xB1DBADBD, %eax");
 

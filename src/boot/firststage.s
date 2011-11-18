@@ -87,9 +87,6 @@ start:
 ;	jnz myinc	
 ;	jmp bck
 
-	;Enable Interrupts
-	cli
-
 	; Jump to the second stage of the boot loader
 	jmp SECOND_STAGE_LOAD_SEGMENT:0000
 
