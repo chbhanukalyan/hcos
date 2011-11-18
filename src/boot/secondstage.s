@@ -97,7 +97,7 @@ mode32:
 	mov byte [0x000B8000], 'a'
 
 	mov eax, 4
-	mov bl, 16
+	mov bl, NUM_THIRDSTAGE_SECTORS
 	mov edi, THIRD_STAGE_LOAD_ADDRESS
 	call read_sectors
 
@@ -208,7 +208,7 @@ mov byte [0x000B8002], 'B'
 	jz wait_for_sector 
 
 	; Now Read all 512 bytes into memory
-	mov ecx, 4*256	; read upto 512 (256 words) bytes from port
+	mov ecx, NUM_THIRDSTAGE_SECTORS*256	; read upto 512 (256 words) bytes from port
 	cld
 	mov dx, HDPC_DATA_WORD
 	rep insw

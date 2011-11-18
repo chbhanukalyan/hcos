@@ -29,7 +29,7 @@ $(FIRSTSTAGE): $(FIRSTSTAGE).s defs12.hs
 	$(NASM) -o $(FIRSTSTAGE) $(FIRSTSTAGE).s
 
 $(SECONDSTAGE): $(SECONDSTAGE).s defs12.hs harddisk.hs
-	$(NASM) -o $(SECONDSTAGE) $(SECONDSTAGE).s
+	$(NASM) -D NUM_THIRDSTAGE_SECTORS=$(NUM_THIRDSTAGE_SECTORS) -o $(SECONDSTAGE) $(SECONDSTAGE).s
 
 LIBS	:=	libc/libc.a		\
 
@@ -51,7 +51,7 @@ $(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE) $(THIRDSTAGE)
 	#dd if=/dev/zero of=$(DISKIMG) bs=1024 count=10240
 	dd if=$(FIRSTSTAGE) of=$(DISKIMG) bs=512 count=1 conv=notrunc
 	dd if=$(SECONDSTAGE) of=$(DISKIMG) bs=512 count=2 seek=1 conv=notrunc
-	dd if=$(THIRDSTAGE) of=$(DISKIMG) bs=512 count=16 seek=4 conv=notrunc
+	dd if=$(THIRDSTAGE) of=$(DISKIMG) bs=512 count=$(NUM_THIRDSTAGE_SECTORS) seek=4 conv=notrunc
 
 # Libraries
 libc/libc.a:
