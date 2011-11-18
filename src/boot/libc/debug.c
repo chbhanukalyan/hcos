@@ -19,33 +19,18 @@
  * This File is a part of the Holy Cow Operating System, which is written and
  * maintained by Bhanu Kalyan Chetlapalli <chbhanukalyan@gmail.com>.
  *
- * This file contains the various generic function declarations
+ * This file contains the various debug helpers
  */
 
-#ifndef __LIBC_STDDEFS_H__
-#define __LIBC_STDDEFS_H__
+#include "stddefs.h"
 
-#include <types.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern void clearscreen(void);
-extern void print_msg(const char *msg);
-extern int strlen(const char *str);
-extern void *memset(void *s, int c, int n);
-extern void *memcpy(void *d, const void *s, int n);
-extern char* strncpy(char *d, const char *s, int n);
-
-extern void assert(int val, const char *str, int lineno);
-#define	ASSERT(cond)	assert((cond), __FILE__, __LINE__)
-
-extern int printf(const char *, ...);
-
-#ifdef __cplusplus
+void assert(int val, const char *str, int lineno)
+{
+	if (!val) {
+		printf("ASSERT HIT @ %s: %d\n", str, lineno);
+		asm volatile ("mov $0xDEADBEEF, %eax");
+		while (1);
+	}
 }
-#endif
 
-#endif /* __LIBC_STDDEFS_H__ */
 

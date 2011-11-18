@@ -28,6 +28,7 @@ TARGET	:=	libc.a
 OBJS	:=	string.o		\
 			screenops.o		\
 			stdio.o			\
+			debug.o			\
 
 $(TARGET): $(OBJS)
 	$(AR) $(AR_FLAGS) $(TARGET) $(OBJS)

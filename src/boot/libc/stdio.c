@@ -24,7 +24,7 @@
 
 #include "stddefs.h"
 
-int hex_to_str(unsigned int *pval, char *s)
+static int int_to_str_hex(unsigned int *pval, char *s)
 {
 	unsigned int v = *pval;
 
@@ -39,26 +39,61 @@ int hex_to_str(unsigned int *pval, char *s)
 	return i + 2;
 }
 
+static int int_to_str_base(unsigned int *pval, char *s, int base)
+{
+	unsigned int v = *pval;
+	int i, digits = 0;
+
+	while (v) {
+		v /= base;
+		digits++;
+	}
+
+	v = *pval;
+	for (i = 0; i < digits; i++) {
+		s[digits - i - 1] = '0' + v % base;
+		v /= base;
+	}
+	return digits;
+}
+
+#define	TMP_BUF_SZ	256
 int printf(const char *s, ...)
 {
 	int i, j;
-	char b[256];
+	char b[TMP_BUF_SZ];
 
 	/* Access other variables from stack */
 	unsigned int *stackptr = (void*)&s;
 
-	for (i = 0, j = 0; j < 200;) {
+	for (i = 0, j = 0; s[i];) {
 		if (s[i] == '%') {
 			i++;
 			switch (s[i]) {
+				/* TODO make sure we dont overflow the temp buffer */
 				case 'x':
 				case 'p':
-					j += hex_to_str(++stackptr, &b[j]);
+					j += int_to_str_hex(++stackptr, &b[j]);
 					i++;
 					break;
+
+				case 'd':
+					j += int_to_str_base(++stackptr, &b[j], 10);
+					i++;
+					break;
+
+				case 's': {
+					const char **sp = (const char**)++stackptr;
+					strncpy(&b[j], *sp, TMP_BUF_SZ - j);
+					j += strlen(*sp);
+					i++;
+					break;
+				}
+
 				case '%':
 					b[j++] = '%';
 					break;
+
 				default:
 					break;
 			}
@@ -66,7 +101,7 @@ int printf(const char *s, ...)
 			b[j++] = s[i++];
 		}
 	}
-	b[255] = '\0';
+	b[j] = '\0';
 
 	print_msg(b);
 
