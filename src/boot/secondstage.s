@@ -36,9 +36,6 @@ start:
 	mov es, ax
 	mov ss, ax
 
-	; mov on to more imp work
-	cli
-
 	; Enable the A20 Address line
 	; A20 is a vestige from the DOS era, where ppl though that 1MB is all
 	; the main memory you will *ever* need. So to enable the higher memory
