@@ -21,16 +21,13 @@
 # Used to build libc
 #
 
-BASE := $(shell pwd)
+BASE := $(shell pwd)/..
 
 include ../defs.mk
 
-TARGET	:=	libc.a
+TARGET	:=	libkutils.a
 
-OBJS	:=	string.o		\
-			screenops.o		\
-			stdio.o			\
-			debug.o			\
+OBJS	:=	ioport.o		\
 
 $(TARGET): $(OBJS)
 	$(AR) $(AR_FLAGS) $(TARGET) $(OBJS)

@@ -21,10 +21,16 @@
 # Contains basic variable defs
 #
 
+# Host compile defs
+HOST_CC		=	x86_64-redhat-linux-gcc
+HOST_CCFLAGS=	-g3 -Wall -Werror -m32
+HOST_LD		=	x86_64-redhat-linux-gcc
+HOST_LDFLAGS=	-m32
+
 # Assembler used is NASM
 NASM		=	nasm
 CC			=	x86_64-redhat-linux-gcc
-CC_FLAGS	=	-I. -Ilibc -g3 -Wall -Werror -m32 -nostdinc -nodefaultlibs -nostartfiles -nostdlib -fno-builtin
+CC_FLAGS	=	-I$(BASE) -I$(BASE)/libc -I$(BASE)/kutils -g3 -Wall -Werror -m32 -nostdinc -nodefaultlibs -nostartfiles -nostdlib -fno-builtin
 LD			=	ld
 LD_FLAGS	=	-melf_i386 -nostdlib -nodefaultlibs -nostartfiles
 AR			=	ar

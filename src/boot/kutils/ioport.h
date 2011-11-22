@@ -19,32 +19,28 @@
  * This File is a part of the Holy Cow Operating System, which is written and
  * maintained by Bhanu Kalyan Chetlapalli <chbhanukalyan@gmail.com>.
  *
- * This file contains the various FIXED addresses macros etc
+ * This file contains the various Programmable IO helper functions
  */
 
-#ifndef __FIXEDDEFS_H__
-#define __FIXEDDEFS_H__
+#ifndef __KUTILS_IOPORT_H__
+#define __KUTILS_IOPORT_H__
 
-#include <types.h>
+#include <stddefs.h>
 
-#define	THIRD_STAGE_LOAD_ADDRESS	0x00A00000
-#define	THIRD_STAGE_DATA_ADDRESS	0x00B00000
-#define	THIRD_STAGE_BSS_ADDRESS		0x00B80000
-#define	THIRD_STAGE_STACK_ADDRESS	0x02000000
-#define	HCOS_KERNEL_ADDRSPLIT		0xC0000000
+static inline u8 inb(u16 ioport)
+{
+	u8 val;
+	asm volatile("inb %1, %0"
+			:"=a"(val):"aN"(ioport):"eax");
+	return val;
+}
 
-#define	IDTR_BASE_ADDRESS			0x00900000
+static inline void outb(u16 ioport, u8 val)
+{
+	asm volatile("outb %1, %0"
+			::"a"(val),"aN"(ioport):"eax");
+}
 
-/* Paging */
-#define	PAGE_BITS	12
-#define	PAGE_SIZE	(0x1 << PAGE_BITS)
-#define	PAGE_MASK	(PAGE_SIZE-1)
 
-#define	PDE_ADDR	0x00C00000
-
-/* TODO Make these defs runtime */
-#define	MAX_PHYS_RAM_PAGES			((256<<10)>>(PAGE_BITS - 10))
-#define	MEMORY_MAP_PHYS_ADDR		0x00900000
-
-#endif /* __FIXEDDEFS_H__ */
+#endif /* __KUTILS_IOPORT_H__ */
 

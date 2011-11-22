@@ -19,32 +19,9 @@
  * This File is a part of the Holy Cow Operating System, which is written and
  * maintained by Bhanu Kalyan Chetlapalli <chbhanukalyan@gmail.com>.
  *
- * This file contains the various FIXED addresses macros etc
+ * This file contains the definitions of helper functions required to do PIO
  */
 
-#ifndef __FIXEDDEFS_H__
-#define __FIXEDDEFS_H__
+#include <ioport.h>
 
-#include <types.h>
-
-#define	THIRD_STAGE_LOAD_ADDRESS	0x00A00000
-#define	THIRD_STAGE_DATA_ADDRESS	0x00B00000
-#define	THIRD_STAGE_BSS_ADDRESS		0x00B80000
-#define	THIRD_STAGE_STACK_ADDRESS	0x02000000
-#define	HCOS_KERNEL_ADDRSPLIT		0xC0000000
-
-#define	IDTR_BASE_ADDRESS			0x00900000
-
-/* Paging */
-#define	PAGE_BITS	12
-#define	PAGE_SIZE	(0x1 << PAGE_BITS)
-#define	PAGE_MASK	(PAGE_SIZE-1)
-
-#define	PDE_ADDR	0x00C00000
-
-/* TODO Make these defs runtime */
-#define	MAX_PHYS_RAM_PAGES			((256<<10)>>(PAGE_BITS - 10))
-#define	MEMORY_MAP_PHYS_ADDR		0x00900000
-
-#endif /* __FIXEDDEFS_H__ */
 

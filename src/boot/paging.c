@@ -33,8 +33,6 @@
 #define	PAGE_TBL_BITSHIFT	12
 #define	PAGE_TBL_OFFSET(p)	(((p) >> PAGE_TBL_BITSHIFT) & 0x3FF)
 
-#define	PDE_ADDR	0x00C00000
-
 /* 
  * Page Directory Entry Format
  *

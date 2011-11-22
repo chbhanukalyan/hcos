@@ -27,15 +27,15 @@
 #include <interrupts.h>
 
 /* TODO move this to a proper file */
-void intr_hndlr(void)
-{
-    asm(".text\n\t"
+extern void intr_hndlr(void);
+asm(
+	".text\n\t"
+	".globl intr_hndlr\n\t"
+	".type intr_hndlr, @function\n\t"
     ".align 4\n\t"
-    ".globl intr_hndlr\n\t"
+    "intr_hndlr:\n\t"
 	"mov $0x1111FADD, %eax\n\t"
-	"abc:jmp abc\n\t"
 	"iret\n\t");
-}
 
 
 void setup_idt(void)

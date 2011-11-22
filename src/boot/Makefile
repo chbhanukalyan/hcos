@@ -21,6 +21,8 @@
 # Used to build the bootloader part of the OS
 #
 
+BASE := $(shell pwd)
+
 include defs.mk
 
 all: $(DISKIMG)
@@ -31,13 +33,18 @@ $(FIRSTSTAGE): $(FIRSTSTAGE).s defs12.hs
 $(SECONDSTAGE): $(SECONDSTAGE).s defs12.hs harddisk.hs
 	$(NASM) -D NUM_THIRDSTAGE_SECTORS=$(NUM_THIRDSTAGE_SECTORS) -o $(SECONDSTAGE) $(SECONDSTAGE).s
 
+SUBDIRS	:=	libc	\
+			kutils	\
+
 LIBS	:=	libc/libc.a		\
+			kutils/libkutils.a	\
 
 OBJS	:=	thirdstage.o	\
 			interrupts.o	\
+			8259.o			\
 			paging.o		\
 
-$(THIRDSTAGE): $(OBJS) $(LIBS)
+$(THIRDSTAGE): $(OBJS) subdirs
 	$(LD) $(LD_FLAGS) -o $(THIRDSTAGE).out -Ttext $(THIRDSTAGE_LOAD_ADDRESS) -Tdata $(THIRDSTAGE_DATA_ADDRESS) -Tbss $(THIRDSTAGE_BSS_ADDRESS)  -e $(THIRD_STAGE_ENTRYPOINT) $(OBJS) $(LIBS)
 	$(OBJCOPY) -R .note -R .comment -S -O binary $(THIRDSTAGE).out $(THIRDSTAGE)
 
@@ -55,8 +62,10 @@ $(DISKIMG):	$(FIRSTSTAGE) $(SECONDSTAGE) $(THIRDSTAGE)
 	dd if=$(THIRDSTAGE) of=$(DISKIMG) bs=512 count=$(NUM_THIRDSTAGE_SECTORS) seek=4 conv=notrunc
 
 # Libraries
-libc/libc.a:
-	make -C libc
+subdirs:
+	for dir in $(SUBDIRS); do \
+		$(MAKE) -C $$dir; \
+	done
 
 clean:
 	-rm -f $(FIRSTSTAGE)
@@ -64,4 +73,7 @@ clean:
 	-rm -f $(THIRDSTAGE) $(THIRDSTAGE).out
 	-rm -f $(OBJS)
 	-rm -f $(DISKIMG)
-	make -C libc clean
+	for dir in $(SUBDIRS); do \
+		$(MAKE) -C $$dir clean; \
+	done
+
